@@ -231,4 +231,4 @@ async def buy(ctx, item_number: int, *, role_name: str):
 
 
 
-bot.run("")
+bot.run("") #Paste your Bot Token
