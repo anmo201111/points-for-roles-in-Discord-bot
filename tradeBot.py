@@ -47,7 +47,7 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
     isEvent = input("Is this a new event? (y/n): ").strip().lower()
     if isEvent == 'y':
-        Channel = bot.get_channel(1358681114784432289)
+        Channel = bot.get_channel(1374277436098875403)
         await Channel.send("📢 @everyone you can now farm xp")  # Replace with your channel ID
 
 
@@ -61,13 +61,28 @@ async def on_message(message):
     save_points()
     await bot.process_commands(message)
 
-class AddItemModal(Modal, title="🛍️ Add Shop Item"):
-    item_name = TextInput(label="Item Name", placeholder="Enter the item name...", max_length=50)
-    item_price = TextInput(label="Item Price", placeholder="Enter the price of the item...", max_length=10)
+class AddItemView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Add Item", style=discord.ButtonStyle.green)
+    async def add_item(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(AddItemModal())
+
+
+class AddItemModal(Modal):
+    def __init__(self):
+        super().__init__(title="🛍️ Add Shop Item")
+
+        self.item_name = TextInput(label="Item Name", placeholder="Enter the item name...", max_length=50)
+        self.item_price = TextInput(label="Item Price", placeholder="Enter the price of the item...", max_length=10)
+
+        self.add_item(self.item_name)
+        self.add_item(self.item_price)
 
     async def on_submit(self, interaction: discord.Interaction):
-        item_name = self.item_name.value
-        item_price = self.item_price.value
+        item_name = self.item_name.value.strip()
+        item_price = self.item_price.value.strip()
 
         try:
             price = float(item_price)
@@ -78,18 +93,15 @@ class AddItemModal(Modal, title="🛍️ Add Shop Item"):
             await interaction.response.send_message("❌ The price must be a valid number!", ephemeral=True)
             return
 
+        if not item_name:
+            await interaction.response.send_message("❌ Item name cannot be empty!", ephemeral=True)
+            return
+
         item = {"name": item_name, "price": price}
         shop_items.append(item)
         save_shop_items()
-        await interaction.response.send_message(f"✅ Added `{item_name}` with price `{price}` to the shop!", ephemeral=True)
+        await interaction.response.send_message(f"✅ Added `{item_name}` for `{price}` points!", ephemeral=True)
 
-class AddItemView(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
-    @discord.ui.button(label="Add Item", style=discord.ButtonStyle.green)
-    async def add_item(self, interaction: discord.Interaction):
-        await interaction.response.send_modal(AddItemModal())
 
 @bot.command()
 async def help(ctx):
@@ -231,4 +243,4 @@ async def buy(ctx, item_number: int, *, role_name: str):
 
 
 
-bot.run("") #Paste your Bot Token
+bot.run("") #Your Token
